@@ -8,10 +8,9 @@ module.exports = {
     hardhat: {},
     base_sepolia: {
       url: process.env.BASE_SEPOLIA_RPC_URL || "",
-      accounts:
-        process.env.VERIFIER_PRIVATE_KEY !== undefined
-          ? [process.env.VERIFIER_PRIVATE_KEY]
-          : [],
+      accounts: process.env.VERIFIER_PRIVATE_KEY
+        ? [process.env.VERIFIER_PRIVATE_KEY]
+        : [],
     },
   },
   etherscan: {
