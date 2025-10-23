@@ -1,5 +1,7 @@
 # 🚀 Blockchain Social Escrow
 
+*This project is currently under active development and is not production-ready. Use for testing and educational purposes only.*
+
 A decentralized, trustless escrow dApp for collaborations between project founders and Key Opinion Leaders (KOLs). This project ensures that funds are held securely on-chain and released automatically only when the agreed-upon social media engagement is verified.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -47,7 +49,3 @@ The system is composed of three main parts that work together:
 -   **Backend:** Node.js
 -   **Frontend:** React, Vite
 -   **Utilities:** OpenZeppelin Contracts
-
-
-
-
