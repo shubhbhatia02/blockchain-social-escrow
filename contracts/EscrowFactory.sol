@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 import "./Escrow.sol";
 
 /**
- * @title EscrowFactory
+ * @title EscrowFactor 
  * @dev A factory contract to deploy and track new Escrow contracts.
  */
 contract EscrowFactory {

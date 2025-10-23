@@ -10,29 +10,26 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
  */
 contract Escrow is ReentrancyGuard {
     // --- Constants ---
-    uint64 public constant POST_BY_DEADLINE_PERIOD = 24 hours;
-    uint64 public constant HOLD_FOR_PERIOD = 24 hours;
+    uint64 public constant VERIFICATION_DELAY = 2 hours;
 
     // --- State Variables ---
     address public immutable founder;
     address public immutable kol;
     uint256 public immutable amount;
-    string public immutable xHandle;
+    string public xHandle;
     bytes32 public immutable nonce;
     address public immutable verifier;
     uint64 public immutable createdAt;
 
-    uint64 public startAt; // Timestamp when the verifier confirms the tweet is live.
-
     enum Status {
         Active,
         Released,
-        Refunded
+        Refunded,
+        Completed
     }
     Status public status;
 
     // --- Events ---
-    event Started(bytes32 tweetId, uint64 startAt);
     event Released(address to, uint256 amount);
     event Refunded(address to, uint256 amount, string reason);
 
@@ -74,9 +71,7 @@ contract Escrow is ReentrancyGuard {
             bytes32, // nonce
             address, // verifier
             uint64, // createdAt
-            uint64, // startAt
-            uint64, // postByDeadline
-            uint64 // holdFor
+            uint64 // verificationDeadline
         )
     {
         return (
@@ -87,27 +82,45 @@ contract Escrow is ReentrancyGuard {
             nonce,
             verifier,
             createdAt,
-            startAt,
-            createdAt + POST_BY_DEADLINE_PERIOD,
-            HOLD_FOR_PERIOD
+            createdAt + VERIFICATION_DELAY
         );
     }
 
     // --- State-Changing Functions ---
 
-    function markStart(bytes32 tweetId) external onlyVerifier {
-        // TODO: Implement logic
-    }
-
     function release() external onlyVerifier {
-        // TODO: Implement logic
+        require(status == Status.Active, "Escrow: Not active");
+        require(
+            block.timestamp >= createdAt + VERIFICATION_DELAY,
+            "Escrow: Verification delay not over"
+        );
+
+        status = Status.Released;
+        emit Released(kol, amount);
     }
 
-    function refund(string calldata reason) external {
-        // TODO: Implement logic
+    function refund(string calldata reason) external onlyVerifier {
+        require(status == Status.Active, "Escrow: Not active");
+        require(
+            block.timestamp >= createdAt + VERIFICATION_DELAY,
+            "Escrow: Verification delay not over"
+        );
+
+        status = Status.Refunded;
+        emit Refunded(founder, amount, reason);
     }
 
     function withdraw() external nonReentrant {
-        // TODO: Implement pull-payment withdrawal logic for KOL or Founder
+        if (status == Status.Released) {
+            require(msg.sender == kol, "Escrow: Only KOL can withdraw after release");
+            status = Status.Completed; // Prevent re-withdrawal
+            payable(kol).transfer(amount);
+        } else if (status == Status.Refunded) {
+            require(msg.sender == founder, "Escrow: Only founder can withdraw after refund");
+            status = Status.Completed; // Prevent re-withdrawal
+            payable(founder).transfer(amount);
+        } else {
+            revert("Escrow: Not in a withdrawable state");
+        }
     }
 }
